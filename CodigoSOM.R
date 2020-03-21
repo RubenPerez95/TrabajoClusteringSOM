@@ -1,6 +1,6 @@
 ## Se establece el directorio donde se encuentra el CSV con los datos
-setwd("C:/Users/Lydia Prado Ibáñez/Documents/Universidad/Máster/Desarrollo de Sistemas Inteligentes/TrabajoClusteringSOM")
-#setwd("")
+## setwd("C:/Users/Lydia Prado Ibáñez/Documents/Universidad/Máster/Desarrollo de Sistemas Inteligentes/TrabajoClusteringSOM")
+setwd("C:/Users/ruben/Desktop/TrabajoClusteringSOM")
 ## ----- Librerias que se van a usar (Insertar las que sean necesarias) ----- ##
 library(kohonen)
 library(dplyr)
@@ -14,6 +14,28 @@ datosCSV <- select(datosCSV, -c(Channel, Region))
 
 ## Se comprueban los datos almacenados en datosCSV para ver si se han borrado las variables deseadas. Borrar cuando se haga correctamente la comprobacion.
 summary(datosCSV)
+
+
+### --- Funcionalidad para comprobar si se cumple el Principio de Pareto --- ###
+
+## Número de filas totales que contiene el CSV
+numeroFilas = nrow(datosCSV)
+## Numero de filas que representan el 20% de las filas totales (clientes)
+veintePorcienClientes = numeroFilas * 0.2
+## Suma de cada elemento en cada fila del csv
+arraySumaFilas = rowSums(datosCSV, na.rm=FALSE, dims = 1)
+## Suma total de filas
+sumaTotalFilas = sum(arraySumaFilas, na.rm = FALSE, dims = 1)
+## Ordenación de menor a mayor de cada fila
+sumaFilasOrd = sort(arraySumaFilas, decreasing = TRUE)
+
+## Representación del 80% de ganancias,
+ventePorcienTotal = sumaTotalFilas * 0.8
+## Suma del 20% de clientes
+sumaVeinte = sum(sumaFilasOrd[1:veintePorcienClientes])
+
+### -- Se puede concluir que la regla no se cumple -- ###
+
 
 ## Se inicia de forma aleatoria. 
 #set.seed(1000)
