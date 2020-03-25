@@ -129,49 +129,54 @@ plot(mapaAutoOutliers,type="mapping",bgcol=c("paleturquoise","#F5D0FA","springgr
 add.cluster.boundaries(mapaAutoOutliers,clustering=gruposOutliers)
 
 ## Cálculo de media para establecer el representante del grupo obtenido
-mediaRepresentante <- mean(arraySumaFilas)
-print(mediaRepresentante)
-
-### --- DATOS POR REGION --- ###
-
-## Filtrado de datos en funcion de las variables cualitativas de Region 
-datosLisboa <- select(filter(datosOriginalesCSV, Region == 1), -c(Channel, Region))
-datosOporto <- select(filter(datosOriginalesCSV, Region == 2), -c(Channel, Region))
-datosOtros <- select(filter(datosOriginalesCSV, Region == 3), -c(Channel, Region))
-
-## Ingresos totales por Region
-sumaIngresosLisboa <- sum(rowSums(datosLisboa, na.rm=FALSE, dims = 1))
-sumaIngresosOporto <- sum(rowSums(datosOporto, na.rm=FALSE, dims = 1))
-sumaIngresosOtros <- sum(rowSums(datosOtros, na.rm=FALSE, dims = 1))
-
-## Numero de clientes por Region
-clientesLisboa <- nrow(datosLisboa)
-clientesOporto <- nrow(datosOporto)
-clientesOtros <- nrow(datosOtros)
-
-## Ingresos medios por Region
-ingresosMediosLisboa <- sumaIngresosLisboa/clientesLisboa
-ingresosMediosOporto <- sumaIngresosOporto/clientesOporto
-ingresosMediosOtros <- sumaIngresosOtros/clientesOtros
+## mediaRepresentante <- mean(arraySumaFilas)
+## print(mediaRepresentante)
 
 
-### --- DATOS POR CHANNEL --- ###
 
-## Filtrado de datos en funcion de las variables cualitativas de Channel
-datosMinorista <- select(filter(datosOriginalesCSV, Channel == 1), -c(Channel, Region))
-datosHosteleria <- select(filter(datosOriginalesCSV, Channel == 2), -c(Channel, Region))
+## --- Generacion de grupos --- ##
 
-## Ingresos totales por Channel
-sumaIngresosMinorista <- sum(rowSums(datosMinorista, na.rm=FALSE, dims = 1))
-sumaIngresosHosteleria <- sum(rowSums(datosHosteleria, na.rm=FALSE, dims = 1))
+datosGrupo1 <- select(filter(datosOriginalesCSV, Region == 1 & Channel == 1), -c(Channel, Region))
+datosGrupo2 <- select(filter(datosOriginalesCSV, Region == 2 & Channel == 1), -c(Channel, Region))
+datosGrupo3 <- select(filter(datosOriginalesCSV, Region == 3 & Channel == 1), -c(Channel, Region))
+datosGrupo4 <- select(filter(datosOriginalesCSV, Region == 1 & Channel == 2), -c(Channel, Region))
+datosGrupo5 <- select(filter(datosOriginalesCSV, Region == 2 & Channel == 2), -c(Channel, Region))
+datosGrupo6 <- select(filter(datosOriginalesCSV, Region == 3 & Channel == 2), -c(Channel, Region))
 
-## Numero de clientes por Channel
-clientesMinorista <- nrow(datosMinorista)
-clientesHosteleria <- nrow(datosHosteleria)
 
-## Ingresos medios por Channel
-ingresosMediosMinorista <- sumaIngresosMinorista/clientesMinorista
-ingresosMediosHosteleria <- sumaIngresosHosteleria/clientesHosteleria
+## Medias totales por grupo --> Representantes
+mediaIngresosGrupo1 <- mean(rowSums(datosGrupo1))
+mediaIngresosGrupo2 <- mean(rowSums(datosGrupo2))
+mediaIngresosGrupo3 <- mean(rowSums(datosGrupo3))
+mediaIngresosGrupo4 <- mean(rowSums(datosGrupo4))
+mediaIngresosGrupo5 <- mean(rowSums(datosGrupo5))
+mediaIngresosGrupo6 <- mean(rowSums(datosGrupo6))
+
+
+## Ingresos totales por grupo
+sumaIngresosGrupo1 <- sum(rowSums(datosGrupo1, na.rm=FALSE, dims = 1))
+sumaIngresosGrupo2 <- sum(rowSums(datosGrupo2, na.rm=FALSE, dims = 1))
+sumaIngresosGrupo3 <- sum(rowSums(datosGrupo3, na.rm=FALSE, dims = 1))
+sumaIngresosGrupo4 <- sum(rowSums(datosGrupo4, na.rm=FALSE, dims = 1))
+sumaIngresosGrupo5 <- sum(rowSums(datosGrupo5, na.rm=FALSE, dims = 1))
+sumaIngresosGrupo6 <- sum(rowSums(datosGrupo6, na.rm=FALSE, dims = 1))
+
+## Numero de clientes por grupo
+clientesGrupo1 <- nrow(datosGrupo1)
+clientesGrupo2 <- nrow(datosGrupo2)
+clientesGrupo3 <- nrow(datosGrupo3)
+clientesGrupo4 <- nrow(datosGrupo4)
+clientesGrupo5 <- nrow(datosGrupo5)
+clientesGrupo6 <- nrow(datosGrupo6)
+
+print(mediaIngresosGrupo1)
+print(mediaIngresosGrupo2)
+print(mediaIngresosGrupo3)
+print(mediaIngresosGrupo4)
+print(mediaIngresosGrupo5)
+print(mediaIngresosGrupo6)
+
+
 
 
 
