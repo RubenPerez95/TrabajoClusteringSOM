@@ -1,6 +1,7 @@
 ## Se establece el directorio donde se encuentra el CSV con los datos
 ## setwd("C:/Users/Lydia Prado Ibáñez/Documents/Universidad/Máster/Desarrollo de Sistemas Inteligentes/TrabajoClusteringSOM")
-setwd("C:/Users/ruben/Desktop/TrabajoClusteringSOM")
+ setwd("C:/Users/ruben/Desktop/TrabajoClusteringSOM")
+
 ## ----- Librerias que se van a usar (Insertar las que sean necesarias) ----- ##
 library(kohonen)
 library(dplyr)
@@ -12,9 +13,6 @@ datosOriginalesCSV <- read.csv('./Datos Muestra/Wholesale customers data.csv')
 
 ## Se eliminan las variables irrelevantes para el analisis. En este caso "Channel" y "Region"
 datosCSV <- select(datosOriginalesCSV, -c(Channel, Region))
-
-## Se comprueban los datos almacenados en datosCSV para ver si se han borrado las variables deseadas. Borrar cuando se haga correctamente la comprobacion.
-summary(datosCSV)
 
 
 ### --- Funcionalidad para comprobar si se cumple el Principio de Pareto --- ###
@@ -38,44 +36,38 @@ sumaVeinte = sum(sumaFilasOrd[1:veintePorcienClientes])
 ### -- Se puede concluir que la regla no se cumple -- ###
 
 
-## Se inicia de forma aleatoria. 
-#set.seed(1000)
 ## Se omiten los datos que venga nulos o vacios en el CSV
 datosCSV <- na.omit(datosCSV)
 
-## Se realiza el escalado o estandarizacion de los datos --> Se debe estudiar mas a fondo que se hace aqui
+## Se realiza el escalado o estandarizacion de los datos
 datosEscalados <- scale(datosCSV)
-summary(datosEscalados)
 
-## Se genera el mapa auto-organizado con los datos que han sido estandarizados. Probamos de momento con un grid de 10x10. Esto sirve para entrenarlo
-## Si existen demasiados nodos vacios, reducir las dimensiones. En caso de que los nodos se sombreen demasiado, aumentar dimensiones. Es cuestiÃ³n de probar.
-## Es necesario estudiar si es necesario separar las muestras en dos grupos. Uno empleado para realizar el entrenamiento y otro para el testing.
-## Esto es una alternativa. Se ha de probar cuÃ¡ntas iteraciones se necesitan para entrenar el grid y ver si la solucion converge.
-mapaAuto2 <- som(datosEscalados, grid = somgrid(6,6,"hexagonal"), rlen = 1000)
+## Se genera el mapa auto-organizado con los datos que han sido estandarizados.
+mapaAuto <- som(datosEscalados, grid = somgrid(6,6,"hexagonal"), rlen = 1000)
 
 ## Se plasma en una grafica el mapa obtenido. Probar diferentes plots para ver cual es el mas adecuado al problema. Se pueden usar varios y analizarlos.
 ## Estudiar temas de colores para representar mejor los sombreados.
-plot(mapaAuto2, type = "count")
-plot(mapaAuto2, shape = "straight")
-plot(mapaAuto2, type = "changes")
+plot(mapaAuto, type = "count")
+plot(mapaAuto, shape = "straight")
+plot(mapaAuto, type = "changes")
 
 ## Podemos comprobar cuantos elementos existen en un nodo. QuizÃ¡ nos venga bien para el anÃ¡lisis.
-elementosNodo <- table(mapaAuto2$unit.classif)
-print(elementosNodo)
+elementosNodo <- table(mapaAuto$unit.classif)
 
 ## Podemos comprobar los nodos que se han asignado a cada registro del csv
-print(mapaAuto2$unit.classif) 
+print(mapaAuto$unit.classif) 
 
-## Se puede generar una grafica de distancias. Representa la distancia euclidiana entre los vectores de cada neurona con su vecina.
+## Se puede generar una grafica de distancias. Representa la distancia euclidea entre los vectores de cada neurona con su vecina.
 ## Se obtienen los Outliers
-plot(mapaAuto2, type="dist.neighbours", shape = "straight")
+plot(mapaAuto, type="dist.neighbours", shape = "straight")
+
 
 ## CLUSTERING CON SOM
 
-## Realizar la matriz de distancia entre los nodos
-distancia <- dist(getCodes(mapaAuto2,1))
+## Realiza la matriz de distancia entre los nodos
+distancia <- dist(getCodes(mapaAuto,1))
 
-## Se realiza el agrupamiento jerarquico con las distancias y los nodos y se dibuja el gráfico
+## Se realiza el agrupamiento jerarquico con las distancias y los nodos y se dibuja el grafico
 agrupamiento <- hclust(distancia,method="ward.D2",members=elementosNodo)
 plot(agrupamiento,hang=-1,labels=F)
 
@@ -85,20 +77,20 @@ rect.hclust(agrupamiento,k)
 
 ## Se muestra a qué cluster pertenece cada grupo
 grupos <- cutree(agrupamiento, k)
-print(grupos)
 
 ## Se muestran los clusters en el grafico
-plot(mapaAuto2,type="mapping",bgcol=c("paleturquoise","#F5D0FA","springgreen")[grupos],shape = "straight")
-add.cluster.boundaries(mapaAuto2,clustering=grupos)
+plot(mapaAuto,type="mapping",bgcol=c("paleturquoise","#F5D0FA","springgreen")[grupos],shape = "straight")
+add.cluster.boundaries(mapaAuto,clustering=grupos)
+
 
 
 ## CLUSTERING CON SOM sin Outliers
 
 
+## Se realiza lo mismo que en el caso anterior
 ## Carga de csv sin Outliers
 datosCSVSinOutliers <- read.csv('./Datos Muestra/Wholesale customers data Sin Outliers.csv')
 datosCSVSinOutliers <- select(datosCSVSinOutliers, -c(Channel, Region))
-summary(datosCSVSinOutliers)
 
 datosEscaladosOutliers <- scale(datosCSVSinOutliers)
 
@@ -116,7 +108,7 @@ distanciaOutliers <- dist(getCodes(mapaAutoOutliers,1))
 agrupamientoOutliers <- hclust(distanciaOutliers,method="ward.D2",members=elementosNodoOutliers)
 plot(agrupamientoOutliers,hang=-1,labels=F)
 
-## Se prueba a hacer diversos grupos en base al resultado de la gráfica (se ve un buen resultado con 4 o 5 grupos)
+## Se prueba a hacer diversos grupos en base al resultado de la gráfica. En este caso, el mejor resultado sale con k=1
 k <- 1
 rect.hclust(agrupamientoOutliers,k)
 
@@ -128,13 +120,8 @@ print(gruposOutliers)
 plot(mapaAutoOutliers,type="mapping",bgcol=c("paleturquoise","#F5D0FA","springgreen")[gruposOutliers],shape = "straight")
 add.cluster.boundaries(mapaAutoOutliers,clustering=gruposOutliers)
 
-## Cálculo de media para establecer el representante del grupo obtenido
-## mediaRepresentante <- mean(arraySumaFilas)
-## print(mediaRepresentante)
 
-
-
-## --- Generacion de grupos --- ##
+## --- Generacion de grupos a partir de la combinacion de los valores tomados por Region y Channel--- ##
 
 datosGrupo1 <- select(filter(datosOriginalesCSV, Region == 1 & Channel == 1), -c(Channel, Region))
 datosGrupo2 <- select(filter(datosOriginalesCSV, Region == 2 & Channel == 1), -c(Channel, Region))
@@ -143,14 +130,6 @@ datosGrupo4 <- select(filter(datosOriginalesCSV, Region == 1 & Channel == 2), -c
 datosGrupo5 <- select(filter(datosOriginalesCSV, Region == 2 & Channel == 2), -c(Channel, Region))
 datosGrupo6 <- select(filter(datosOriginalesCSV, Region == 3 & Channel == 2), -c(Channel, Region))
 
-
-## Medias totales por grupo --> Representantes
-mediaIngresosGrupo1 <- mean(rowSums(datosGrupo1))
-mediaIngresosGrupo2 <- mean(rowSums(datosGrupo2))
-mediaIngresosGrupo3 <- mean(rowSums(datosGrupo3))
-mediaIngresosGrupo4 <- mean(rowSums(datosGrupo4))
-mediaIngresosGrupo5 <- mean(rowSums(datosGrupo5))
-mediaIngresosGrupo6 <- mean(rowSums(datosGrupo6))
 
 
 ## Ingresos totales por grupo
@@ -169,14 +148,111 @@ clientesGrupo4 <- nrow(datosGrupo4)
 clientesGrupo5 <- nrow(datosGrupo5)
 clientesGrupo6 <- nrow(datosGrupo6)
 
-print(mediaIngresosGrupo1)
-print(mediaIngresosGrupo2)
-print(mediaIngresosGrupo3)
-print(mediaIngresosGrupo4)
-print(mediaIngresosGrupo5)
-print(mediaIngresosGrupo6)
 
 
+## Medias totales por grupo --> Se establecen los Representantes
+mediaIngresosGrupo1 <- mean(rowSums(datosGrupo1))
+mediaIngresosGrupo2 <- mean(rowSums(datosGrupo2))
+mediaIngresosGrupo3 <- mean(rowSums(datosGrupo3))
+mediaIngresosGrupo4 <- mean(rowSums(datosGrupo4))
+mediaIngresosGrupo5 <- mean(rowSums(datosGrupo5))
+mediaIngresosGrupo6 <- mean(rowSums(datosGrupo6))
+
+
+
+## datos para la variable Delicassen
+grupo1Delicassen <- c(select(datosGrupo1, c(Delicassen)))
+grupo2Delicassen <- c(select(datosGrupo2, c(Delicassen)))
+grupo3Delicassen <- c(select(datosGrupo3, c(Delicassen)))
+grupo4Delicassen <- c(select(datosGrupo4, c(Delicassen)))
+grupo5Delicassen <- c(select(datosGrupo5, c(Delicassen)))
+grupo6Delicassen <- c(select(datosGrupo6, c(Delicassen)))
+
+# Test de Kruskal-Wallis para los ingresos de Delicassen de cada grupo
+kruskal.test(list(grupo1Delicassen, grupo2Delicassen, grupo3Delicassen, grupo4Delicassen, grupo5Delicassen, grupo6Delicassen))
+
+# Ejemplo de Prueba de combinaciones con pares de grupos que dan hipotesis nulas para Delicassen
+wilcox.test(x = as.numeric(unlist(select(datosGrupo1, c(Delicassen)))), y = as.numeric(unlist(select(datosGrupo4, c(Delicassen)))), conf.int = 0.05)
+
+
+
+## datos para la variable Fresh
+grupo1Fresh <- c(select(datosGrupo1, c(Fresh)))
+grupo2Fresh <- c(select(datosGrupo2, c(Fresh)))
+grupo3Fresh <- c(select(datosGrupo3, c(Fresh)))
+grupo4Fresh <- c(select(datosGrupo4, c(Fresh)))
+grupo5Fresh <- c(select(datosGrupo5, c(Fresh)))
+grupo6Fresh <- c(select(datosGrupo6, c(Fresh)))
+
+# Test de Kruskal-Wallis para los ingresos de Fresh de cada grupo
+kruskal.test(list(grupo1Fresh, grupo2Fresh, grupo3Fresh, grupo4Fresh, grupo5Fresh, grupo6Fresh))
+
+# Ejemplo de Prueba de combinaciones con pares de grupos que dan hipotesis nulas para Fresh
+wilcox.test(x = as.numeric(unlist(select(datosGrupo3, c(Fresh)))), y = as.numeric(unlist(select(datosGrupo6, c(Fresh)))), conf.int = 0.05)
+
+
+
+## datos para la variable Milk
+grupo1Milk <- c(select(datosGrupo1, c(Milk)))
+grupo2Milk <- c(select(datosGrupo2, c(Milk)))
+grupo3Milk <- c(select(datosGrupo3, c(Milk)))
+grupo4Milk <- c(select(datosGrupo4, c(Milk)))
+grupo5Milk <- c(select(datosGrupo5, c(Milk)))
+grupo6Milk <- c(select(datosGrupo6, c(Milk)))
+
+# Test de Kruskal-Wallis para los ingresos de Milk de cada grupo
+kruskal.test(list(grupo1Milk, grupo2Milk, grupo3Milk, grupo4Milk, grupo5Milk, grupo6Milk))
+
+# Ejemplo de Prueba de combinaciones con pares de grupos que dan hipotesis nulas para Milk
+wilcox.test(x = as.numeric(unlist(select(datosGrupo5, c(Milk)))), y = as.numeric(unlist(select(datosGrupo6, c(Milk)))), conf.int = 0.05)
+
+
+
+## datos para la variable Grocery
+grupo1Grocery <- c(select(datosGrupo1, c(Grocery)))
+grupo2Grocery <- c(select(datosGrupo2, c(Grocery)))
+grupo3Grocery <- c(select(datosGrupo3, c(Grocery)))
+grupo4Grocery <- c(select(datosGrupo4, c(Grocery)))
+grupo5Grocery <- c(select(datosGrupo5, c(Grocery)))
+grupo6Grocery <- c(select(datosGrupo6, c(Grocery)))
+
+# Test de Kruskal-Wallis para los ingresos de Grocery de cada grupo
+kruskal.test(list(grupo1Grocery, grupo2Grocery, grupo3Grocery, grupo4Grocery, grupo5Grocery, grupo6Grocery))
+
+# Ejemplo de Prueba de combinaciones con pares de grupos que dan hipotesis nulas para Grocery
+wilcox.test(x = as.numeric(unlist(select(datosGrupo1, c(Grocery)))), y = as.numeric(unlist(select(datosGrupo6, c(Grocery)))), conf.int = 0.05)
+
+
+
+## datos para la variable Frozen
+grupo1Frozen <- c(select(datosGrupo1, c(Frozen)))
+grupo2Frozen <- c(select(datosGrupo2, c(Frozen)))
+grupo3Frozen <- c(select(datosGrupo3, c(Frozen)))
+grupo4Frozen <- c(select(datosGrupo4, c(Frozen)))
+grupo5Frozen <- c(select(datosGrupo5, c(Frozen)))
+grupo6Frozen <- c(select(datosGrupo6, c(Frozen)))
+
+# Test de Kruskal-Wallis para los ingresos de Frozen de cada grupo
+kruskal.test(list(grupo1Frozen, grupo2Frozen, grupo3Frozen, grupo4Frozen, grupo5Frozen, grupo6Frozen))
+
+# Ejemplo de Prueba de combinaciones con pares de grupos que dan hipotesis nulas para Frozen
+wilcox.test(x = as.numeric(unlist(select(datosGrupo5, c(Frozen)))), y = as.numeric(unlist(select(datosGrupo6, c(Frozen)))), conf.int = 0.05)
+
+
+
+## datos para la variable Detergents_Paper
+grupo1Detergents_Paper <- c(select(datosGrupo1, c(Detergents_Paper)))
+grupo2Detergents_Paper <- c(select(datosGrupo2, c(Detergents_Paper)))
+grupo3Detergents_Paper <- c(select(datosGrupo3, c(Detergents_Paper)))
+grupo4Detergents_Paper <- c(select(datosGrupo4, c(Detergents_Paper)))
+grupo5Detergents_Paper <- c(select(datosGrupo5, c(Detergents_Paper)))
+grupo6Detergents_Paper <- c(select(datosGrupo6, c(Detergents_Paper)))
+
+# Test de Kruskal-Wallis para los ingresos de Detergents_Paper de cada grupo
+kruskal.test(list(grupo1Detergents_Paper, grupo2Detergents_Paper, grupo3Detergents_Paper, grupo4Detergents_Paper, grupo5Detergents_Paper, grupo6Detergents_Paper))
+
+# Ejemplo de prueba de combinaciones con pares de grupos que dan hipotesis nulas para Detergents_Paper
+wilcox.test(x = as.numeric(unlist(select(datosGrupo1, c(Detergents_Paper)))), y = as.numeric(unlist(select(datosGrupo6, c(Detergents_Paper)))), conf.int = 0.05)
 
 
 
